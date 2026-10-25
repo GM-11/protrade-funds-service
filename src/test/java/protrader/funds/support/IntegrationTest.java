@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -21,6 +22,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  * The transfers table is emptied before every test.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(FakeCashOwnerConfig.class)
 public abstract class IntegrationTest {
 
 	static final String EXTERNAL_DB = System.getenv("FUNDS_TEST_DB_URL");
@@ -67,9 +69,14 @@ public abstract class IntegrationTest {
 	@Autowired
 	protected JdbcClient jdbc;
 
+	/** Stands in for the cash owner (default answer: APPLIED). Reset before every test. */
+	@Autowired
+	protected FakeCashOwner cashOwner;
+
 	@BeforeEach
 	protected void emptyTables() {
 		jdbc.sql("truncate transfers").update();
+		cashOwner.reset();
 	}
 
 	/** Public port, logged in as this account with a JWT. */

@@ -32,6 +32,24 @@ public interface TransferRepository extends Repository<Transfer, TransferKey> {
             @Param("reason") String reason, @Param("shortfallMinor") Long shortfallMinor,
             @Param("createdAt") Instant createdAt, @Param("completedAt") Instant completedAt);
 
+    /** Records the cash owner's yes. Returns 1 = we recorded it, 0 = someone else already did. */
+    @Modifying
+    @Query("""
+            update transfers set status = 'COMPLETED', completed_at = :now
+            where account_id = :accountId and transfer_id = :transferId and status = 'PENDING'
+            """)
+    int markCompleted(@Param("accountId") long accountId, @Param("transferId") String transferId,
+            @Param("now") Instant now);
+
+    /** Records the cash owner's no. Returns 1 = we recorded it, 0 = someone else already did. */
+    @Modifying
+    @Query("""
+            update transfers set status = 'REJECTED', reason = :reason, shortfall_minor = :shortfallMinor, completed_at = :now
+            where account_id = :accountId and transfer_id = :transferId and status = 'PENDING'
+            """)
+    int markRejected(@Param("accountId") long accountId, @Param("transferId") String transferId,
+            @Param("reason") String reason, @Param("shortfallMinor") Long shortfallMinor, @Param("now") Instant now);
+
     @Query("select * from transfers where account_id = :accountId and transfer_id = :transferId")
     Optional<Transfer> find(@Param("accountId") long accountId, @Param("transferId") String transferId);
 

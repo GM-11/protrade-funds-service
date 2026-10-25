@@ -1,6 +1,7 @@
 package protrader.funds.controllers;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 import org.springframework.http.MediaType;
@@ -10,8 +11,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import protrader.funds.config.FundsProperties;
+import protrader.funds.dto.CreateResult;
 import protrader.funds.dto.InternalDepositRequest;
 import protrader.funds.dto.TransferResponse;
+import protrader.funds.entity.Transfer;
 import protrader.funds.entity.TransferKind;
 import protrader.funds.services.TransferService;
 import protrader.funds.utils.Inputs;
@@ -38,7 +41,13 @@ public class InternalTransferController {
 		long accountId = Inputs.accountId(body.accountId());
 		String transferId = Inputs.transferId(body.transferId());
 		long amountMinor = Inputs.amountMinor(body.amount(), maxTransferMinor);
-		return TransferController.answer(transfers.create(accountId, transferId, TransferKind.DEPOSIT, amountMinor,
-				clock.instant().truncatedTo(ChronoUnit.MILLIS)));
+		CreateResult result = transfers.create(accountId, transferId, TransferKind.DEPOSIT, amountMinor, now());
+		Transfer settled = transfers.submit(result.transfer(), now());   // row is committed as PENDING before we ask
+		return TransferController.answer(settled, result.created());
+	}
+
+	/** Cut to milliseconds: what we answer now must equal what a retry reads back from the DB. */
+	private Instant now() {
+		return clock.instant().truncatedTo(ChronoUnit.MILLIS);
 	}
 }

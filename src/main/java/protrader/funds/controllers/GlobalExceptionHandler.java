@@ -21,7 +21,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     ResponseEntity<ApiError> api(ApiException e) {
-        return ResponseEntity.status(e.status()).body(new ApiError(e.code(), e.getMessage(), e.field(), null));
+        return ResponseEntity.status(e.status()).body(new ApiError(e.code(), e.getMessage(), e.field(), e.shortfall()));
     }
 
     @ExceptionHandler(TransferIdReusedException.class)

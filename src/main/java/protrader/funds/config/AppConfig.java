@@ -13,11 +13,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.scheduling.TaskScheduler;
 
+import com.protrader.proto.exchange.v1.CashOwnerGrpc;
+
 import protrader.funds.config.ApiKeys;
 import protrader.funds.config.AuthFilter;
 import protrader.funds.config.JwksKeys;
 import protrader.funds.config.JwtVerifier;
 import protrader.funds.config.PortRoutingFilter;
+import protrader.funds.grpc.GrpcCashOwnerClient;
 import protrader.funds.utils.ErrorWriter;
 
 @Configuration
@@ -28,6 +31,11 @@ public class AppConfig {
 	@Bean
 	Clock clock() {
 		return Clock.systemUTC();
+	}
+
+	@Bean
+	GrpcCashOwnerClient cashOwnerClient(CashOwnerGrpc.CashOwnerBlockingStub stub, FundsProperties props) {
+		return new GrpcCashOwnerClient(stub, props.cashOwnerDeadline());
 	}
 
 	@Bean

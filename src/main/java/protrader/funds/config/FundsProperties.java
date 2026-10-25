@@ -10,6 +10,7 @@ public record FundsProperties(
 		int internalPort,
 		String internalBindAddress,
 		long maxTransferMinor,
+		Duration cashOwnerDeadline,
 		Auth auth) {
 
 	public record Auth(

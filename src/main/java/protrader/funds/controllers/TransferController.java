@@ -25,10 +25,12 @@ import protrader.funds.dto.TransferRequest;
 import protrader.funds.dto.TransferResponse;
 import protrader.funds.entity.Transfer;
 import protrader.funds.entity.TransferKind;
+import protrader.funds.entity.TransferStatus;
 import protrader.funds.repositories.TransferRepository.Cursor;
 import protrader.funds.services.TransferService;
 import protrader.funds.utils.ApiException;
 import protrader.funds.utils.Inputs;
+import protrader.funds.utils.Money;
 import protrader.funds.utils.PageTokens;
 
 /** Public Funds API, base /v2/funds (contract §3.4). The account always comes from the credentials. */
@@ -58,7 +60,8 @@ public class TransferController {
 		String transferId = Inputs.transferId(body.transferId());
 		long amountMinor = Inputs.amountMinor(body.amount(), maxTransferMinor);
 		CreateResult result = transfers.create(accountId, transferId, TransferKind.WITHDRAW, amountMinor, now());
-		return answer(result);
+		Transfer settled = transfers.submit(result.transfer(), now());   // row is committed as PENDING before we ask
+		return answer(settled, result.created());
 	}
 
 	@GetMapping("/transfers/{transferId}")
@@ -87,10 +90,23 @@ public class TransferController {
 		return new TransferListResponse(page.stream().map(TransferResponse::of).toList(), next);
 	}
 
-	/** 201 when this request created it, 200 when it existed (same answer as the first time). */
-	static ResponseEntity<TransferResponse> answer(CreateResult result) {
-		return ResponseEntity.status(result.created() ? HttpStatus.CREATED : HttpStatus.OK)
-				.body(TransferResponse.of(result.transfer()));
+	/**
+	 * What the caller is told. REJECTED becomes a 403 with the reason; COMPLETED and PENDING are 201 when this
+	 * request created the transfer, 200 when it existed already (same answer as the first time).
+	 */
+	static ResponseEntity<TransferResponse> answer(Transfer t, boolean created) {
+		if (t.status() == TransferStatus.REJECTED) {
+			String reason = t.reason();
+			if ("insufficient_cash".equals(reason)) {
+				throw new ApiException(HttpStatus.FORBIDDEN, "insufficient_cash", "not enough free cash", null,
+						Money.format(t.shortfallMinor() == null ? 0 : t.shortfallMinor()));
+			}
+			if ("unknown_account".equals(reason)) {
+				throw new ApiException(HttpStatus.FORBIDDEN, "account_not_found", "no such account", null);
+			}
+			throw new ApiException(HttpStatus.FORBIDDEN, "rejected", "transfer was rejected", null);
+		}
+		return ResponseEntity.status(created ? HttpStatus.CREATED : HttpStatus.OK).body(TransferResponse.of(t));
 	}
 
 	/** Cut to milliseconds: what we answer now must equal what a retry reads back from the DB. */

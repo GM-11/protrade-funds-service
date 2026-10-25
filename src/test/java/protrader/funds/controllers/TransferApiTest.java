@@ -1,6 +1,7 @@
 package protrader.funds.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ import tools.jackson.databind.JsonNode;
 /**
  * Funds REST API end to end (real server, real Postgres).
  *
- *  - withdraw: new → 201 pending; same retry → 200 identical body; reused id → 422 transfer_id_reused
+ *  - withdraw: new → 201 completed; same retry → 200 identical body; reused id → 422 transfer_id_reused
  *  - public deposit → 422 not_supported_yet; internal deposit (internal port) → 201, retry 200
  *  - ports kept apart: /internal on the public port → 404, /v2 on the internal port → 404
  *  - read one: own → 200, someone else's → 404 transfer_not_found
@@ -35,15 +36,16 @@ class TransferApiTest extends IntegrationTest {
 		assertEquals("wd-1", t.get("transfer_id").asString());
 		assertEquals("withdraw", t.get("kind").asString());
 		assertEquals("500.50", t.get("amount").asString());
-		assertEquals("pending", t.get("status").asString());
+		assertEquals("completed", t.get("status").asString());
 		assertTrue(t.get("reason").isNull());
-		assertTrue(t.get("completed_at").isNull());
+		assertFalse(t.get("completed_at").isNull());
 		assertTrue(t.get("created_at").asString().matches("\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z"));
 
 		Http.Response retry = as(ALICE).post("/v2/funds/withdrawals", "{\"transfer_id\":\"wd-1\",\"amount\":\"500.50\"}");
 		assertEquals(200, retry.status());
 		assertEquals(first.json(), retry.json(), "a retry gets exactly the first answer");
 		assertEquals(1, rowCount());
+		assertEquals(1, cashOwner.calls());
 	}
 
 	@Test
