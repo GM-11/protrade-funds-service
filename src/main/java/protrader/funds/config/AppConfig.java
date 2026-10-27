@@ -15,11 +15,6 @@ import org.springframework.scheduling.TaskScheduler;
 
 import com.protrader.proto.exchange.v1.CashOwnerGrpc;
 
-import protrader.funds.config.ApiKeys;
-import protrader.funds.config.AuthFilter;
-import protrader.funds.config.JwksKeys;
-import protrader.funds.config.JwtVerifier;
-import protrader.funds.config.PortRoutingFilter;
 import protrader.funds.grpc.GrpcCashOwnerClient;
 import protrader.funds.utils.ErrorWriter;
 

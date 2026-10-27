@@ -11,7 +11,8 @@ public record FundsProperties(
 		String internalBindAddress,
 		long maxTransferMinor,
 		Duration cashOwnerDeadline,
-		Auth auth) {
+		Auth auth,
+		Kafka kafka) {
 
 	public record Auth(
 			String jwksUrl,
@@ -20,5 +21,8 @@ public record FundsProperties(
 			Duration jwksRefresh,
 			String apiKeysSource,
 			Duration apiKeysPoll) {
+	}
+
+	public record Kafka(String accountUpdatesTopic) {
 	}
 }
