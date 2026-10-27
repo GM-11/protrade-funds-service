@@ -78,6 +78,7 @@ public abstract class IntegrationTest {
 	protected void emptyTables() {
 		jdbc.sql("truncate transfers").update();
 		jdbc.sql("truncate balances").update();
+		jdbc.sql("truncate orders").update();
 		cashOwner.reset();
 	}
 

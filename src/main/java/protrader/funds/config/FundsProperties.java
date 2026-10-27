@@ -11,6 +11,7 @@ public record FundsProperties(
 		String internalBindAddress,
 		long maxTransferMinor,
 		Duration cashOwnerDeadline,
+		String instrumentsFile,
 		Auth auth,
 		Kafka kafka) {
 

@@ -23,5 +23,7 @@ public class Balance {
     private long realizedPnlMinor;
     private long lastAppliedSeq;
     private Instant updatedAt;
+    /** Option C: account_seq at which a seq jump was seen (order history may miss photos); null = none. */
+    private Long historyGapSeq;
 
 }

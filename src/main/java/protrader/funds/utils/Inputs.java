@@ -48,6 +48,15 @@ public final class Inputs {
 		}
 	}
 
+	/** client_order_id: 1–48 chars of [A-Za-z0-9_-] (same rule as the gateway). */
+	public static String clientOrderId(String value) {
+		if (value == null || !TRANSFER_ID.matcher(value).matches()) {
+			throw ApiException.invalidField("client_order_id",
+					"client_order_id must be 1-48 characters of A-Z a-z 0-9 _ -");
+		}
+		return value;
+	}
+
 	/** Page size: default 50, 1..500. */
 	public static int limit(Integer value) {
 		if (value == null) {

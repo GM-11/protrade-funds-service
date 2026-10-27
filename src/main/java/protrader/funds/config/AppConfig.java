@@ -34,6 +34,11 @@ public class AppConfig {
 	}
 
 	@Bean
+	Instruments instruments(FundsProperties props) {
+		return Instruments.load(props.instrumentsFile());
+	}
+
+	@Bean
 	JwksKeys jwksKeys(FundsProperties props, Clock clock) {
 		return new JwksKeys(props.auth().jwksUrl(), clock);
 	}
