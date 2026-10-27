@@ -49,6 +49,7 @@ public abstract class IntegrationTest {
 
 	@DynamicPropertySource
 	static void properties(DynamicPropertyRegistry registry) {
+		registry.add("spring.kafka.listener.auto-startup", () -> "false");
 		if (POSTGRES != null) {
 			registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
 			registry.add("spring.datasource.username", POSTGRES::getUsername);
@@ -76,6 +77,7 @@ public abstract class IntegrationTest {
 	@BeforeEach
 	protected void emptyTables() {
 		jdbc.sql("truncate transfers").update();
+		jdbc.sql("truncate balances").update();
 		cashOwner.reset();
 	}
 
